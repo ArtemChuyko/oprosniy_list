@@ -1,24 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Questionnaire App
+
+A Next.js application for creating and managing dynamic questionnaire forms.
+
+## Architecture
+
+This project follows a structured architecture:
+
+### Folder Structure
+
+```
+questionnaire-app/
+├── app/
+│   ├── f/[slug]/          # Public form pages
+│   │   ├── page.tsx        # Form display page
+│   │   └── done/           # Success page after submission
+│   ├── admin/              # Admin dashboard
+│   │   ├── page.tsx        # Forms list
+│   │   └── forms/[slug]/   # Form editor
+│   └── api/                # API routes
+│       ├── forms/[slug]/   # GET form data
+│       ├── submit/[slug]/  # POST form submission
+│       └── admin/forms/save/ # POST save form
+├── lib/
+│   └── forms/
+│       ├── schema.ts       # TypeScript data models
+│       └── storage.ts      # Form storage helpers
+└── data/
+    └── forms/              # JSON form definitions
+        └── demo.json       # Demo form example
+```
+
+### Data Models
+
+- **Form**: Contains sections, metadata, and configuration
+- **Section**: Groups related questions
+- **Question**: Individual form fields with types, validation, and logic
+- **Help**: Help text and links for questions
+- **Logic**: Conditional display/validation rules
+
+### Features (To Be Implemented)
+
+- ✅ Form structure and data models
+- ✅ Basic UI placeholders
+- ✅ API route stubs
+- ⏳ Form rendering with all question types
+- ⏳ Form submission handling
+- ⏳ Email notifications
+- ⏳ Excel export
+- ⏳ File uploads
+- ⏳ Admin form builder
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Copy the environment variables example:
+
+```bash
+cp .env.example .env.local
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Available Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/` - Home page
+- `/f/[slug]` - Public form view (e.g., `/f/demo`)
+- `/f/[slug]/done` - Form submission success page
+- `/admin` - Admin dashboard (forms list)
+- `/admin/forms/[slug]` - Form editor (e.g., `/admin/forms/demo`)
+
+### API Endpoints
+
+- `GET /api/forms/[slug]` - Get form data
+- `POST /api/submit/[slug]` - Submit form
+- `POST /api/admin/forms/save` - Save/update form
+
+## Development
+
+### Building
+
+```bash
+npm run build
+```
+
+### Linting
+
+```bash
+npm run lint
+```
 
 ## Learn More
 
@@ -26,8 +106,6 @@ To learn more about Next.js, take a look at the following resources:
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel
 

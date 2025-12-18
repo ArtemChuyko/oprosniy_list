@@ -1,0 +1,89 @@
+{
+  "id": "demo-form-1",
+  "slug": "demo",
+  "title": "Demo Questionnaire",
+  "description": "This is a sample questionnaire form for demonstration purposes",
+  "sections": [
+    {
+      "id": "section-1",
+      "title": "Personal Information",
+      "description": "Please provide your basic information",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "text",
+          "label": "Full Name",
+          "placeholder": "Enter your full name",
+          "required": true,
+          "help": {
+            "text": "Enter your legal name as it appears on official documents"
+          }
+        },
+        {
+          "id": "q2",
+          "type": "email",
+          "label": "Email Address",
+          "placeholder": "your.email@example.com",
+          "required": true,
+          "validation": {
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "message": "Please enter a valid email address"
+          }
+        },
+        {
+          "id": "q3",
+          "type": "tel",
+          "label": "Phone Number",
+          "placeholder": "+1 (555) 123-4567",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "section-2",
+      "title": "Preferences",
+      "description": "Tell us about your preferences",
+      "questions": [
+        {
+          "id": "q4",
+          "type": "select",
+          "label": "Preferred Contact Method",
+          "required": true,
+          "options": ["Email", "Phone", "SMS", "Mail"]
+        },
+        {
+          "id": "q5",
+          "type": "radio",
+          "label": "How did you hear about us?",
+          "required": false,
+          "options": ["Social Media", "Friend/Colleague", "Search Engine", "Advertisement", "Other"]
+        },
+        {
+          "id": "q6",
+          "type": "checkbox",
+          "label": "I agree to receive marketing communications",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "section-3",
+      "title": "Additional Information",
+      "questions": [
+        {
+          "id": "q7",
+          "type": "textarea",
+          "label": "Additional Comments",
+          "placeholder": "Please share any additional information...",
+          "required": false,
+          "validation": {
+            "max": 1000,
+            "message": "Comments must be less than 1000 characters"
+          }
+        }
+      ]
+    }
+  ],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
+}
