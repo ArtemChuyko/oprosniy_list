@@ -12,6 +12,9 @@ import {
   storeFiles,
   type FileMetadata,
 } from '@/lib/forms/fileStorage';
+import { generateExcelReport } from '@/lib/forms/excelGenerator';
+import { sendSubmissionEmail } from '@/lib/forms/emailService';
+import { cleanupExpiredFiles } from '@/lib/forms/cleanup';
 import type { FormSubmission } from '@/lib/forms/schema';
 
 export async function POST(
@@ -139,9 +142,48 @@ export async function POST(
       submittedAt: new Date().toISOString(),
     };
 
-    // TODO: Save submission to database/storage
-    // TODO: Send email notification if configured
-    // TODO: Generate Excel file if configured
+    // Generate Excel report
+    let excelBuffer: Buffer;
+    try {
+      excelBuffer = await generateExcelReport(form, {
+        answers,
+        fileMetadata,
+        submittedAt: submission.submittedAt,
+      });
+    } catch (error) {
+      console.error('Error generating Excel report:', error);
+      // Continue without Excel if generation fails
+      excelBuffer = Buffer.alloc(0);
+    }
+
+    // Send email notification
+    let emailSent = false;
+    let downloadLinks: string[] | undefined;
+    if (process.env.OWNER_EMAIL) {
+      try {
+        // Get base URL from request
+        const url = new URL(request.url);
+        const baseUrl = `${url.protocol}//${url.host}`;
+
+        const emailResult = await sendSubmissionEmail(
+          form.title,
+          submissionId,
+          excelBuffer,
+          fileMetadata,
+          baseUrl
+        );
+        emailSent = emailResult.success;
+        downloadLinks = emailResult.downloadLinks;
+      } catch (error) {
+        console.error('Error sending email:', error);
+        // Don't fail the submission if email fails
+      }
+    }
+
+    // Cleanup old files (run asynchronously, don't wait)
+    cleanupExpiredFiles().catch((error) => {
+      console.error('Error during cleanup:', error);
+    });
 
     return NextResponse.json(
       {
@@ -149,6 +191,8 @@ export async function POST(
         message: 'Form submitted successfully',
         submissionId,
         files: fileMetadata,
+        emailSent,
+        downloadLinks,
       },
       { status: 200 }
     );

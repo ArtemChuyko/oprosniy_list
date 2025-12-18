@@ -38,16 +38,17 @@ questionnaire-app/
 - **Help**: Help text and links for questions
 - **Logic**: Conditional display/validation rules
 
-### Features (To Be Implemented)
+### Features
 
 - ✅ Form structure and data models
-- ✅ Basic UI placeholders
-- ✅ API route stubs
-- ⏳ Form rendering with all question types
-- ⏳ Form submission handling
-- ⏳ Email notifications
-- ⏳ Excel export
-- ⏳ File uploads
+- ✅ Form rendering with all question types (text, email, tel, number, date, select, radio, checkbox, file)
+- ✅ Form submission handling with validation
+- ✅ Email notifications with Excel reports
+- ✅ Excel export (XLSX) with form data
+- ✅ File uploads (JPG, PNG, PDF, MP4)
+- ✅ Conditional logic (show/hide questions)
+- ✅ Help system (modal/sidebar with media blocks)
+- ✅ Progress tracking and autosave
 - ⏳ Admin form builder
 
 ## Getting Started
@@ -63,6 +64,23 @@ Copy the environment variables example:
 ```bash
 cp .env.example .env.local
 ```
+
+Configure email settings in `.env.local`:
+
+```env
+# Required for email notifications
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=your-email@gmail.com
+OWNER_EMAIL=owner@example.com
+```
+
+**Email Setup Notes:**
+- For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password
+- For other providers, check their SMTP settings
+- The `OWNER_EMAIL` is where form submissions will be sent
 
 Then, run the development server:
 
@@ -83,8 +101,20 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ### API Endpoints
 
 - `GET /api/forms/[slug]` - Get form data
-- `POST /api/submit/[slug]` - Submit form
+- `POST /api/submit/[slug]` - Submit form (multipart/form-data with files)
+- `GET /api/download/[submissionId]/[filename]` - Download uploaded file
 - `POST /api/admin/forms/save` - Save/update form
+
+### Email & Reports
+
+When a form is submitted:
+1. An Excel report (XLSX) is generated with all form data
+2. An email is sent to `OWNER_EMAIL` with:
+   - Excel file attached
+   - Uploaded files attached (if under 20MB total)
+   - Download links for files that are too large
+3. Files are stored in `tmp/uploads/[submissionId]/`
+4. Old files are automatically cleaned up after 7 days
 
 ## Development
 
