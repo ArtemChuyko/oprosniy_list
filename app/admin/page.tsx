@@ -5,9 +5,23 @@
 
 import Link from 'next/link';
 import { getAllForms } from '@/lib/forms/storage';
+import Unauthorized from './Unauthorized';
 
-export default async function AdminPage() {
+interface PageProps {
+  searchParams: Promise<{ token?: string }>;
+}
+
+export default async function AdminPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const adminSecret = process.env.ADMIN_SECRET;
+  
+  // Check auth
+  if (adminSecret && params.token !== adminSecret) {
+    return <Unauthorized />;
+  }
+
   const forms = await getAllForms();
+  const token = params.token || '';
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -15,7 +29,7 @@ export default async function AdminPage() {
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <Link
-            href="/admin/forms/new"
+            href={`/admin/forms/new${token ? `?token=${token}` : ''}`}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Create New Form
@@ -53,7 +67,7 @@ export default async function AdminPage() {
                     </div>
                     <div className="flex gap-2">
                       <Link
-                        href={`/admin/forms/${form.slug}`}
+                        href={`/admin/forms/${form.slug}${token ? `?token=${token}` : ''}`}
                         className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
                       >
                         Edit
