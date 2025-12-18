@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Form, Question } from '@/lib/forms/schema';
+import HelpModal from './HelpModal';
+import HelpSidebar from './HelpSidebar';
 
 interface FormRendererProps {
   form: Form;
@@ -229,6 +231,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
     [form, formData]
   );
 
+  // Help state
+  const [helpState, setHelpState] = useState<{
+    question: Question | null;
+    isOpen: boolean;
+  }>({ question: null, isOpen: false });
+
   // Autosave to localStorage
   const storageKey = `form-draft-${form.slug}`;
 
@@ -287,6 +295,42 @@ export default function FormRenderer({ form }: FormRendererProps) {
     }
   };
 
+  const handleHelpClick = (question: Question) => {
+    setHelpState({ question, isOpen: true });
+  };
+
+  const closeHelp = () => {
+    setHelpState({ question: null, isOpen: false });
+  };
+
+  const renderHelpIcon = (question: Question) => {
+    if (!question.help) return null;
+
+    return (
+      <button
+        type="button"
+        onClick={() => handleHelpClick(question)}
+        className="ml-2 text-blue-500 hover:text-blue-700 inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-blue-50 transition-colors"
+        aria-label="Show help"
+        title="Show help"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </button>
+    );
+  };
+
   const renderQuestion = (question: Question) => {
     const error = errors[question.id];
     const value = formData[question.id];
@@ -297,9 +341,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
       case 'tel':
         return (
           <div key={question.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
             </label>
             <input
               type={question.type}
@@ -320,9 +367,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
       case 'textarea':
         return (
           <div key={question.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
             </label>
             <textarea
               {...register(question.id)}
@@ -344,9 +394,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
       case 'number':
         return (
           <div key={question.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
             </label>
             <input
               type="number"
@@ -369,9 +422,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
       case 'date':
         return (
           <div key={question.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
             </label>
             <input
               type="date"
@@ -391,9 +447,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
       case 'select':
         return (
           <div key={question.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
             </label>
             <select
               {...register(question.id)}
@@ -419,9 +478,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
       case 'radio':
         return (
           <div key={question.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              {question.label}
-              {question.required && <span className="text-red-500 ml-1">*</span>}
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
             </label>
             <div className="space-y-2">
               {question.options?.map((option) => (
@@ -452,9 +514,12 @@ export default function FormRenderer({ form }: FormRendererProps) {
           register(question.id);
           return (
             <div key={question.id} className="mb-4">
-              <label className="block text-sm font-medium mb-1">
-                {question.label}
-                {question.required && <span className="text-red-500 ml-1">*</span>}
+              <label className="block text-sm font-medium mb-1 flex items-center">
+                <span>
+                  {question.label}
+                  {question.required && <span className="text-red-500 ml-1">*</span>}
+                </span>
+                {renderHelpIcon(question)}
               </label>
               <div className="space-y-2">
                 {question.options.map((option) => {
@@ -503,9 +568,10 @@ export default function FormRenderer({ form }: FormRendererProps) {
                   {...register(question.id)}
                   className="mr-2"
                 />
-                <span>
+                <span className="flex items-center">
                   {question.label}
                   {question.required && <span className="text-red-500 ml-1">*</span>}
+                  {renderHelpIcon(question)}
                 </span>
               </label>
               {error && (
@@ -568,6 +634,27 @@ export default function FormRenderer({ form }: FormRendererProps) {
           {isSubmitting ? 'Submitting...' : 'Submit Form'}
         </button>
       </div>
+
+      {/* Help Modal/Sidebar */}
+      {helpState.question && helpState.question.help && (
+        <>
+          {helpState.question.help.mode === 'sidebar' ? (
+            <HelpSidebar
+              help={helpState.question.help}
+              isOpen={helpState.isOpen}
+              onClose={closeHelp}
+              questionLabel={helpState.question.label}
+            />
+          ) : (
+            <HelpModal
+              help={helpState.question.help}
+              isOpen={helpState.isOpen}
+              onClose={closeHelp}
+              questionLabel={helpState.question.label}
+            />
+          )}
+        </>
+      )}
     </form>
   );
 }

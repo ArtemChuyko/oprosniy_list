@@ -16,7 +16,19 @@
           "placeholder": "Enter your full name",
           "required": true,
           "help": {
-            "text": "Enter your legal name as it appears on official documents"
+            "mode": "modal",
+            "blocks": [
+              {
+                "type": "text",
+                "content": "Please enter your full legal name exactly as it appears on your official identification documents (driver's license, passport, etc.).\n\nThis should include:\n- First name\n- Middle name (if applicable)\n- Last name\n\nDo not use nicknames or abbreviations."
+              },
+              {
+                "type": "image",
+                "content": "https://via.placeholder.com/600x300?text=Example+ID+Document",
+                "caption": "Example: How your name appears on official documents",
+                "alt": "Example ID document"
+              }
+            ]
           }
         },
         {
@@ -49,7 +61,31 @@
           "type": "select",
           "label": "Preferred Contact Method",
           "required": true,
-          "options": ["Email", "Phone", "SMS", "Mail"]
+          "options": ["Email", "Phone", "SMS", "Mail"],
+          "help": {
+            "mode": "sidebar",
+            "blocks": [
+              {
+                "type": "text",
+                "content": "Select your preferred method of communication. We will use this method to contact you regarding your submission."
+              },
+              {
+                "type": "gallery",
+                "content": "https://via.placeholder.com/400x300?text=Email+Icon,https://via.placeholder.com/400x300?text=Phone+Icon,https://via.placeholder.com/400x300?text=SMS+Icon,https://via.placeholder.com/400x300?text=Mail+Icon",
+                "caption": "Available contact methods",
+                "alt": "Contact method icons"
+              },
+              {
+                "type": "video",
+                "content": "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+                "caption": "Watch this video to learn more about our contact methods"
+              },
+              {
+                "type": "lottie",
+                "content": "https://lottie.host/embed/example.json"
+              }
+            ]
+          }
         },
         {
           "id": "q5",

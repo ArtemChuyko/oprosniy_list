@@ -14,9 +14,22 @@ export type QuestionType =
   | 'checkbox'
   | 'file';
 
+export type HelpMode = 'modal' | 'sidebar' | 'tooltip';
+
+export type HelpBlockType = 'text' | 'image' | 'gallery' | 'lottie' | 'video';
+
+export interface HelpBlock {
+  type: HelpBlockType;
+  content: string; // URL for image/gallery/lottie/video, text for text block
+  caption?: string; // For image/gallery
+  alt?: string; // For image/gallery
+}
+
 export interface Help {
-  text: string;
-  link?: string;
+  text?: string; // Legacy support
+  link?: string; // Legacy support
+  mode?: HelpMode; // Default: 'modal'
+  blocks?: HelpBlock[]; // New structured content
 }
 
 export interface Logic {
