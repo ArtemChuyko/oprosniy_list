@@ -35,7 +35,7 @@
           "type": "tel",
           "label": "Phone Number",
           "placeholder": "+1 (555) 123-4567",
-          "required": false
+          "required": true
         }
       ]
     },
@@ -61,8 +61,8 @@
         {
           "id": "q6",
           "type": "checkbox",
-          "label": "I agree to receive marketing communications",
-          "required": false
+          "label": "I consent to the terms and conditions",
+          "required": true
         }
       ]
     },
@@ -80,6 +80,13 @@
             "max": 1000,
             "message": "Comments must be less than 1000 characters"
           }
+        },
+        {
+          "id": "q8",
+          "type": "text",
+          "label": "Signature",
+          "placeholder": "Type your full name as signature",
+          "required": true
         }
       ]
     }
