@@ -95,10 +95,61 @@
           "options": ["Social Media", "Friend/Colleague", "Search Engine", "Advertisement", "Other"]
         },
         {
+          "id": "q5a",
+          "type": "text",
+          "label": "Please specify which social media platform",
+          "placeholder": "e.g., Facebook, Twitter, Instagram",
+          "required": true,
+          "logic": [
+            {
+              "condition": {
+                "questionId": "q5",
+                "operator": "equals",
+                "value": "Social Media"
+              },
+              "action": "show"
+            }
+          ]
+        },
+        {
           "id": "q6",
           "type": "checkbox",
           "label": "I consent to the terms and conditions",
           "required": true
+        },
+        {
+          "id": "q6a",
+          "type": "checkbox",
+          "label": "Select your preferred communication channels",
+          "required": false,
+          "options": ["Email", "SMS", "Push Notifications", "Phone Calls"],
+          "logic": [
+            {
+              "condition": {
+                "questionId": "q6",
+                "operator": "equals",
+                "value": true
+              },
+              "action": "show"
+            }
+          ]
+        },
+        {
+          "id": "q6b",
+          "type": "text",
+          "label": "Please provide your phone number for SMS notifications",
+          "placeholder": "+1 (555) 123-4567",
+          "required": true,
+          "logic": [
+            {
+              "condition": {
+                "questionId": "q6a",
+                "operator": "includes",
+                "value": "SMS"
+              },
+              "action": "show"
+            }
+          ]
         }
       ]
     },

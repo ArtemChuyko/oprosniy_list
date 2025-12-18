@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Form, Question } from '@/lib/forms/schema';
+import { evaluateVisibility } from '@/lib/forms/logic';
 import HelpModal from './HelpModal';
 import HelpSidebar from './HelpSidebar';
 
@@ -39,11 +40,19 @@ function isSignatureQuestion(question: Question): boolean {
 }
 
 // Build zod schema from form structure
-function buildZodSchema(form: Form) {
+// Only includes visible questions to skip validation for hidden ones
+function buildZodSchema(form: Form, visibleQuestionIds: Set<string>) {
   const schemaObject: Record<string, z.ZodTypeAny> = {};
 
   form.sections.forEach((section) => {
     section.questions.forEach((question) => {
+      // Skip validation for hidden questions
+      if (!visibleQuestionIds.has(question.id)) {
+        // Make all hidden questions optional to avoid validation errors
+        schemaObject[question.id] = z.any().optional();
+        return;
+      }
+
       let fieldSchema: z.ZodTypeAny;
 
       switch (question.type) {
@@ -191,7 +200,6 @@ function calculateProgress(form: Form, formData: FormData): number {
 }
 
 export default function FormRenderer({ form }: FormRendererProps) {
-  const zodSchema = useMemo(() => buildZodSchema(form), [form]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -214,6 +222,23 @@ export default function FormRenderer({ form }: FormRendererProps) {
     return defaults;
   }, [form]);
 
+  // Initial visibility (all visible by default)
+  const initialVisibility = useMemo(() => {
+    const vis: Record<string, boolean> = {};
+    form.sections.forEach((section) => {
+      section.questions.forEach((question) => {
+        vis[question.id] = true;
+      });
+    });
+    return vis;
+  }, [form]);
+
+  // Build initial zod schema (will be updated dynamically)
+  const initialZodSchema = useMemo(
+    () => buildZodSchema(form, new Set(Object.keys(initialVisibility))),
+    [form, initialVisibility]
+  );
+
   const {
     register,
     handleSubmit,
@@ -221,11 +246,52 @@ export default function FormRenderer({ form }: FormRendererProps) {
     formState: { errors },
     setValue,
   } = useForm<FormData>({
-    resolver: zodResolver(zodSchema) as any,
+    resolver: zodResolver(initialZodSchema) as any,
     defaultValues,
   });
 
   const formData = watch();
+
+  // Calculate visibility based on current form data
+  const visibility = useMemo(
+    () => evaluateVisibility(form, formData),
+    [form, formData]
+  );
+
+  const visibleQuestionIds = useMemo(() => {
+    return new Set(
+      Object.entries(visibility)
+        .filter(([_, isVisible]) => isVisible)
+        .map(([questionId]) => questionId)
+    );
+  }, [visibility]);
+
+  // Clear values when questions become hidden
+  const prevVisibility = useRef<Record<string, boolean>>({});
+  useEffect(() => {
+    Object.entries(visibility).forEach(([questionId, isVisible]) => {
+      const wasVisible = prevVisibility.current[questionId] ?? true;
+      if (wasVisible && !isVisible) {
+        // Question became hidden, clear its value
+        const question = form.sections
+          .flatMap((s) => s.questions)
+          .find((q) => q.id === questionId);
+        if (question) {
+          if (question.type === 'checkbox' && question.options && question.options.length > 0) {
+            setValue(questionId, []);
+          } else if (question.type === 'checkbox') {
+            setValue(questionId, false);
+          } else if (question.type === 'number') {
+            setValue(questionId, 0);
+          } else {
+            setValue(questionId, '');
+          }
+        }
+      }
+    });
+    prevVisibility.current = visibility;
+  }, [visibility, form, setValue]);
+
   const progress = useMemo(
     () => calculateProgress(form, formData),
     [form, formData]
@@ -269,12 +335,28 @@ export default function FormRenderer({ form }: FormRendererProps) {
     setSubmitError(null);
 
     try {
+      // Build validation schema for visible questions only
+      const validationSchema = buildZodSchema(form, visibleQuestionIds);
+      const visibleData: FormData = {};
+      visibleQuestionIds.forEach((questionId) => {
+        if (data[questionId] !== undefined) {
+          visibleData[questionId] = data[questionId];
+        }
+      });
+
+      // Validate only visible questions
+      const validationResult = validationSchema.safeParse(visibleData);
+      if (!validationResult.success) {
+        const firstError = validationResult.error.issues[0];
+        throw new Error(firstError?.message || 'Please fix validation errors');
+      }
+
       const response = await fetch(`/api/submit/${form.slug}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ answers: data }),
+        body: JSON.stringify({ answers: visibleData }),
       });
 
       if (!response.ok) {
@@ -332,6 +414,11 @@ export default function FormRenderer({ form }: FormRendererProps) {
   };
 
   const renderQuestion = (question: Question) => {
+    // Skip rendering if question is hidden
+    if (!visibility[question.id]) {
+      return null;
+    }
+
     const error = errors[question.id];
     const value = formData[question.id];
 
