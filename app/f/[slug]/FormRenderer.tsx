@@ -164,6 +164,11 @@ function buildZodSchema(form: Form, visibleQuestionIds: Set<string>) {
           }
           break;
 
+        case 'file':
+          // File fields are handled separately, make them optional in validation
+          fieldSchema = z.any().optional();
+          break;
+
         default:
           fieldSchema = z.string().optional();
       }
@@ -202,6 +207,7 @@ function calculateProgress(form: Form, formData: FormData): number {
 export default function FormRenderer({ form }: FormRendererProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const fileInputsRef = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Build default values from form structure
   const defaultValues = useMemo(() => {
@@ -344,19 +350,48 @@ export default function FormRenderer({ form }: FormRendererProps) {
         }
       });
 
-      // Validate only visible questions
-      const validationResult = validationSchema.safeParse(visibleData);
+      // Validate only visible questions (excluding file fields)
+      const validationData: FormData = {};
+      Object.keys(visibleData).forEach((key) => {
+        const question = form.sections
+          .flatMap((s) => s.questions)
+          .find((q) => q.id === key);
+        if (question?.type !== 'file') {
+          validationData[key] = visibleData[key];
+        }
+      });
+
+      const validationResult = validationSchema.safeParse(validationData);
       if (!validationResult.success) {
         const firstError = validationResult.error.issues[0];
         throw new Error(firstError?.message || 'Please fix validation errors');
       }
 
+      // Prepare FormData for multipart/form-data
+      const formData = new FormData();
+      
+      // Add JSON answers
+      formData.append('answers', JSON.stringify(visibleData));
+
+      // Add files from file inputs
+      Object.entries(fileInputsRef.current).forEach(([questionId, input]) => {
+        if (input && input.files && input.files.length > 0) {
+          const question = form.sections
+            .flatMap((s) => s.questions)
+            .find((q) => q.id === questionId);
+          
+          if (question && visibility[questionId]) {
+            const files = Array.from(input.files);
+            files.forEach((file) => {
+              formData.append(`file_${questionId}`, file);
+            });
+          }
+        }
+      });
+
       const response = await fetch(`/api/submit/${form.slug}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ answers: visibleData }),
+        body: formData, // FormData automatically sets Content-Type with boundary
       });
 
       if (!response.ok) {
@@ -669,6 +704,45 @@ export default function FormRenderer({ form }: FormRendererProps) {
             </div>
           );
         }
+
+      case 'file':
+        return (
+          <div key={question.id} className="mb-4">
+            <label className="block text-sm font-medium mb-1 flex items-center">
+              <span>
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              {renderHelpIcon(question)}
+            </label>
+            <input
+              type="file"
+              ref={(el) => {
+                fileInputsRef.current[question.id] = el;
+              }}
+              multiple={question.multiple || false}
+              accept={question.accept || 'image/jpeg,image/jpg,image/png,application/pdf,video/mp4'}
+              className={`w-full px-3 py-2 border rounded ${
+                error ? 'border-red-500' : 'border-gray-300'
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            {question.multiple && (
+              <p className="mt-1 text-xs text-gray-500">
+                You can select multiple files (max 25MB per file, 100MB total)
+              </p>
+            )}
+            {!question.multiple && (
+              <p className="mt-1 text-xs text-gray-500">
+                Max file size: 25MB. Allowed types: JPG, PNG, PDF, MP4
+              </p>
+            )}
+            {error && (
+              <p className="mt-1 text-sm text-red-500">
+                {error.message as string}
+              </p>
+            )}
+          </div>
+        );
 
       default:
         return null;

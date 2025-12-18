@@ -56,6 +56,9 @@ export interface Question {
     message?: string;
   };
   logic?: Logic[];
+  // File upload specific
+  multiple?: boolean; // For file type, allow multiple files (default: false)
+  accept?: string; // File types to accept (e.g., "image/*,.pdf")
 }
 
 export interface Section {

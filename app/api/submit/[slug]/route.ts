@@ -1,10 +1,17 @@
 /**
  * API route: POST /api/submit/[slug]
- * Handles form submission
+ * Handles form submission with file uploads
  */
 
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { getFormBySlug } from '@/lib/forms/storage';
+import {
+  validateFile,
+  validateTotalSize,
+  storeFiles,
+  type FileMetadata,
+} from '@/lib/forms/fileStorage';
 import type { FormSubmission } from '@/lib/forms/schema';
 
 export async function POST(
@@ -22,12 +29,108 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
-    const { answers } = body;
+    // Parse multipart/form-data
+    const formData = await request.formData();
+    
+    // Extract JSON answers
+    const answersJson = formData.get('answers');
+    if (!answersJson || typeof answersJson !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid form data: answers missing' },
+        { status: 400 }
+      );
+    }
 
-    // TODO: Validate answers against form schema
-    // TODO: Check required fields
-    // TODO: Validate field types and constraints
+    let answers: Record<string, any>;
+    try {
+      answers = JSON.parse(answersJson);
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in answers' },
+        { status: 400 }
+      );
+    }
+
+    // Extract files
+    const filesByQuestion: Record<string, File[]> = {};
+    const fileEntries: [string, File][] = [];
+
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('file_') && value instanceof File) {
+        const questionId = key.replace('file_', '');
+        if (!filesByQuestion[questionId]) {
+          filesByQuestion[questionId] = [];
+        }
+        filesByQuestion[questionId].push(value);
+        fileEntries.push([questionId, value]);
+      }
+    }
+
+    // Validate files
+    const allFiles: File[] = [];
+    for (const [questionId, files] of Object.entries(filesByQuestion)) {
+      const question = form.sections
+        .flatMap((s) => s.questions)
+        .find((q) => q.id === questionId);
+
+      if (!question || question.type !== 'file') {
+        return NextResponse.json(
+          { error: `Invalid file upload for question ${questionId}` },
+          { status: 400 }
+        );
+      }
+
+      // Check if multiple files are allowed
+      if (!question.multiple && files.length > 1) {
+        return NextResponse.json(
+          { error: `Question "${question.label}" only allows a single file` },
+          { status: 400 }
+        );
+      }
+
+      // Validate each file
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const validation = validateFile(file, i);
+        if (!validation.valid) {
+          return NextResponse.json(
+            { error: validation.error },
+            { status: 400 }
+          );
+        }
+        allFiles.push(file);
+      }
+    }
+
+    // Validate total size
+    if (allFiles.length > 0) {
+      const totalSizeValidation = validateTotalSize(allFiles);
+      if (!totalSizeValidation.valid) {
+        return NextResponse.json(
+          { error: totalSizeValidation.error },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Generate submission ID
+    const submissionId = randomUUID();
+
+    // Store files
+    const fileMetadata: Record<string, FileMetadata[]> = {};
+    if (allFiles.length > 0) {
+      const storedFiles = await storeFiles(allFiles, submissionId);
+      
+      // Group files by question ID
+      let fileIndex = 0;
+      for (const [questionId, files] of Object.entries(filesByQuestion)) {
+        fileMetadata[questionId] = storedFiles.slice(
+          fileIndex,
+          fileIndex + files.length
+        );
+        fileIndex += files.length;
+      }
+    }
 
     const submission: FormSubmission = {
       formId: form.id,
@@ -39,20 +142,31 @@ export async function POST(
     // TODO: Save submission to database/storage
     // TODO: Send email notification if configured
     // TODO: Generate Excel file if configured
-    // TODO: Handle file uploads if any
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'Form submitted successfully',
-        submissionId: 'temp-id', // TODO: Return actual submission ID
+        submissionId,
+        files: fileMetadata,
       },
       { status: 200 }
     );
   } catch (error) {
     console.error('Error submitting form:', error);
+    
+    // Provide friendly error messages
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT') || error.message.includes('permission')) {
+        return NextResponse.json(
+          { error: 'File storage error. Please try again or contact support.' },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred while submitting the form. Please try again.' },
       { status: 500 }
     );
   }
