@@ -1,5 +1,5 @@
 /**
- * Server helpers for reading/writing JSON forms from data/forms
+ * Server helpers for reading/writing JSON forms from data/forms directory
  */
 
 import { promises as fs } from 'fs';

@@ -116,7 +116,7 @@ export default function HelpContent({ blocks }: HelpContentProps) {
           <div key={index} className="mb-4">
             <img
               src={block.content}
-              alt={block.alt || block.caption || 'Help image'}
+              alt={block.alt || block.caption || 'Изображение подсказки'}
               className="w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => setZoomedImage(block.content)}
             />
@@ -233,6 +233,7 @@ export default function HelpContent({ blocks }: HelpContentProps) {
             <video
               src={block.content}
               controls
+              autoPlay
               className="w-full rounded-lg"
             >
               Your browser does not support the video tag.

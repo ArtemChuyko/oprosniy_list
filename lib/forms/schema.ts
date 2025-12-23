@@ -61,11 +61,21 @@ export interface Question {
   accept?: string; // File types to accept (e.g., "image/*,.pdf")
 }
 
+export type SectionGradient = 
+  | 'white-blue'      // Белый → светло-синий
+  | 'white-lightblue' // Белый → очень светло-синий
+  | 'white-gray'      // Белый → светло-серый
+  | 'white-purple'    // Белый → светло-фиолетовый
+  | 'white-orange'    // Белый → светло-оранжевый
+  | 'white-green';    // Белый → светло-зеленый
+
 export interface Section {
   id: string;
   title: string;
   description?: string;
   questions: Question[];
+  gradient?: SectionGradient; // Градиент фона раздела
+  logic?: Logic[]; // Условная логика для показа/скрытия раздела
 }
 
 export interface Form {

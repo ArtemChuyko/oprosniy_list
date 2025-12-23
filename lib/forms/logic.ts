@@ -4,8 +4,9 @@
  */
 
 import type { Form, Logic } from './schema';
+import type { FormData } from './formData';
 
-type FormAnswers = Record<string, string | number | boolean | string[]>;
+type FormAnswers = FormData;
 
 /**
  * Evaluates a single logic condition
@@ -105,8 +106,8 @@ function evaluateQuestionLogic(
 }
 
 /**
- * Evaluates visibility for all questions in a form based on current answers
- * Returns a map of questionId -> isVisible
+ * Evaluates visibility for all questions and sections in a form based on current answers
+ * Returns a map of questionId/sectionId -> isVisible
  */
 export function evaluateVisibility(
   form: Form,
@@ -114,9 +115,27 @@ export function evaluateVisibility(
 ): Record<string, boolean> {
   const visibility: Record<string, boolean> = {};
 
-  // First pass: evaluate all questions
+  // First pass: evaluate all sections
   form.sections.forEach((section) => {
+    let sectionVisible = true;
+    if (section.logic && section.logic.length > 0) {
+      sectionVisible = evaluateQuestionLogic(
+        section.id,
+        section.logic,
+        answers
+      );
+    }
+    visibility[section.id] = sectionVisible;
+
+    // Evaluate questions within the section
+    // Questions are visible only if both section is visible AND question logic allows
     section.questions.forEach((question) => {
+      if (!sectionVisible) {
+        // Section is hidden, so all questions in it are hidden
+        visibility[question.id] = false;
+        return;
+      }
+
       if (question.logic && question.logic.length > 0) {
         visibility[question.id] = evaluateQuestionLogic(
           question.id,
@@ -124,7 +143,7 @@ export function evaluateVisibility(
           answers
         );
       } else {
-        // No logic rules, question is always visible
+        // No logic rules, question is visible (since section is visible)
         visibility[question.id] = true;
       }
     });

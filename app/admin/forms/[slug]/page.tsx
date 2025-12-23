@@ -39,12 +39,12 @@ export default async function AdminFormEditPage({ params, searchParams }: PagePr
         <div className="mb-6">
           <Link
             href={`/admin${token ? `?token=${token}` : ''}`}
-            className="text-blue-600 hover:underline mb-4 inline-block"
+            className="text-blue-600 hover:underline mb-4 inline-block font-sans"
           >
-            ← Back to Admin
+            ← Назад к панели администратора
           </Link>
-          <h1 className="text-3xl font-bold">
-            {isNew ? 'Create New Form' : `Edit: ${form?.title}`}
+          <h1 className="text-3xl font-bold text-[#4A4A4A] font-sans">
+            {isNew ? 'Создать новую форму' : `Редактировать: ${form?.title}`}
           </h1>
         </div>
 

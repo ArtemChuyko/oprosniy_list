@@ -6,7 +6,15 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'tmp', 'uploads');
+// Get upload directory from environment variable or use default
+const getUploadDirectory = (): string => {
+  if (process.env.UPLOADS_DIR) {
+    return process.env.UPLOADS_DIR;
+  }
+  return path.join(process.cwd(), 'tmp', 'uploads');
+};
+
+const UPLOAD_DIR = getUploadDirectory();
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB per file
 const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
 
@@ -115,7 +123,8 @@ export async function storeFiles(
 
 /**
  * Gets the upload directory path
+ * Uses environment variable UPLOADS_DIR if set, otherwise defaults to tmp/uploads
  */
 export function getUploadDir(): string {
-  return UPLOAD_DIR;
+  return getUploadDirectory();
 }

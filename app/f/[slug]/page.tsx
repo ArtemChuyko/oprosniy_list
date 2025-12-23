@@ -22,10 +22,10 @@ export default async function FormPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-2xl px-4">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold mb-2">{form.title}</h1>
+        <div className="bg-gray-50 rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold mb-2 text-[#4A4A4A] font-sans">{form.title}</h1>
           {form.description && (
-            <p className="text-gray-600 mb-6">{form.description}</p>
+            <p className="text-[#4A4A4A] font-sans mb-6">{form.description}</p>
           )}
 
           <FormRenderer form={form} />

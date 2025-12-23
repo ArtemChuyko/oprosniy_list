@@ -16,6 +16,7 @@ import { generateExcelReport } from '@/lib/forms/excelGenerator';
 import { sendSubmissionEmail } from '@/lib/forms/emailService';
 import { cleanupExpiredFiles } from '@/lib/forms/cleanup';
 import type { FormSubmission } from '@/lib/forms/schema';
+import type { FormData } from '@/lib/forms/formData';
 
 export async function POST(
   request: Request,
@@ -44,9 +45,9 @@ export async function POST(
       );
     }
 
-    let answers: Record<string, any>;
+    let answers: FormData;
     try {
-      answers = JSON.parse(answersJson);
+      answers = JSON.parse(answersJson) as FormData;
     } catch (error) {
       return NextResponse.json(
         { error: 'Invalid JSON in answers' },
@@ -209,8 +210,12 @@ export async function POST(
       }
     }
 
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'An error occurred while submitting the form. Please try again.';
+    
     return NextResponse.json(
-      { error: 'An error occurred while submitting the form. Please try again.' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

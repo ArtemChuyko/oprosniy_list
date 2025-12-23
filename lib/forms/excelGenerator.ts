@@ -7,7 +7,7 @@ import type { Form } from './schema';
 import type { FileMetadata } from './fileStorage';
 
 interface SubmissionData {
-  answers: Record<string, any>;
+  answers: Record<string, unknown>;
   fileMetadata: Record<string, FileMetadata[]>;
   submittedAt: string;
 }
@@ -16,7 +16,7 @@ interface SubmissionData {
  * Formats answer value for Excel display
  */
 function formatAnswer(
-  value: any,
+  value: unknown,
   questionType: string,
   fileMetadata?: FileMetadata[]
 ): string {
@@ -53,18 +53,13 @@ function formatAnswer(
  * Extracts specific fields from answers by question ID or label pattern
  */
 function extractField(
-  answers: Record<string, any>,
+  answers: Record<string, unknown>,
   form: Form,
-  pattern: string | ((label: string) => boolean)
+  pattern: (label: string) => boolean
 ): string {
   const question = form.sections
     .flatMap((s) => s.questions)
-    .find((q) => {
-      if (typeof pattern === 'string') {
-        return q.id === pattern || q.label.toLowerCase().includes(pattern.toLowerCase());
-      }
-      return pattern(q.label);
-    });
+    .find((q) => pattern(q.label));
 
   if (!question) {
     return 'N/A';

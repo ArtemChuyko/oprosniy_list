@@ -38,25 +38,7 @@ export default async function FormDonePage({ params }: PageProps) {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold mb-2">Thank You!</h1>
-          <p className="text-gray-600 mb-6">
-            Your response for &quot;{form.title}&quot; has been submitted successfully.
-          </p>
-          {/* TODO: Add email confirmation message if email was sent */}
-          <div className="space-x-4">
-            <Link
-              href="/"
-              className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Go Home
-            </Link>
-            <Link
-              href={`/f/${slug}`}
-              className="inline-block px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Submit Another Response
-            </Link>
-          </div>
+          <h1 className="text-2xl font-bold mb-2 text-[#4A4A4A] font-sans">Спасибо!</h1>
         </div>
       </div>
     </div>

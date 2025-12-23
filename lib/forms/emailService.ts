@@ -51,7 +51,7 @@ function createTransporter() {
 
 /**
  * Sends email with attachments
- * Returns download links for files that couldn't be attached
+ * Returns download links for files that couldn't be attached due to size limits
  */
 export async function sendSubmissionEmail(
   formTitle: string,
